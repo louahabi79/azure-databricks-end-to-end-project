@@ -1,14 +1,12 @@
 # Azure Databricks End-to-End Data Engineering Project
 
-This project demonstrates an end-to-end data engineering solution built on Azure Databricks using the Medallion Architecture. The pipeline ingests raw data, standardizes and cleans it in the Silver layer, and builds curated analytical models in the Gold layer for reporting and dimensional analytics.
+End-to-end data engineering pipeline built on **Azure Databricks** using the **Medallion Architecture** (Bronze → Silver → Gold).
 
-The solution covers customer, order, product, and region data, with incremental ingestion using Databricks Autoloader and curated transformations following best practices in modern lakehouse architecture.
+This project demonstrates incremental data ingestion with Autoloader, data cleaning and transformation with PySpark, dimensional modeling with Slowly Changing Dimensions (SCD Type 2), and orchestration using Delta Live Tables (Lakeflow Declarative Pipelines) and Databricks Jobs.
 
 ---
 
-## 1. Architecture
-
-The project follows a Bronze → Silver → Gold workflow and is orchestrated using Databricks workflows and Delta Live Tables / Lakeflow Declarative Pipelines.
+## Architecture
 
 ### High-Level Architecture
 
@@ -18,27 +16,26 @@ The project follows a Bronze → Silver → Gold workflow and is orchestrated us
 
 ![Databricks Workflow Graph](architecture/databricks-workflow-graph.png)
 
-### DLT Products Pipeline
+### DLT / Lakeflow Products Pipeline
 
 ![DLT Products Pipeline](architecture/dlt-products-pipeline.png)
 
 ---
 
-## 2. Tech Stack
+## Tech Stack
 
-- Azure Databricks
-- Apache Spark / PySpark
-- Delta Lake
-- Databricks Autoloader
-- Delta Live Tables (DLT) / Lakeflow Declarative Pipelines
-- Databricks Jobs & Workflows
-- Python
-- Parquet file datasets
-- Serverless Compute (for DLT pipelines)
+- **Platform**: Azure Databricks
+- **Processing**: Apache Spark / PySpark
+- **Storage Format**: Delta Lake
+- **Ingestion**: Databricks Autoloader
+- **Orchestration**: Delta Live Tables (Lakeflow) + Databricks Jobs / Workflows
+- **Governance**: Unity Catalog
+- **Compute**: Serverless (used for DLT pipelines)
+- **Language**: Python
 
 ---
 
-## 3. Project Structure
+## Project Structure
 
 ```text
 azure-databricks-end-to-end-project/
@@ -46,116 +43,81 @@ azure-databricks-end-to-end-project/
 │   ├── high-level-architecture.jpg
 │   ├── databricks-workflow-graph.png
 │   └── dlt-products-pipeline.png
-├── datasets/
-│   └── sample parquet data files
+├── datasets/                  # Sample parquet files
 ├── notebooks/
-│   ├── Bronze/
-│   │   └── raw ingestion and Autoloader-based landing zone processing
-│   ├── Silver/
-│   │   └── transformations, cleaning, deduplication, and standardization
-│   └── Gold/
-│       └── dimensional models, curated tables, and SCD Type 2 logic
+│   ├── Bronze/                # Autoloader ingestion (raw layer)
+│   ├── Silver/                # Cleaning, standardization & transformations
+│   └── Gold/                  # Dimensional modeling + SCD Type 2
 ├── README.md
 └── .gitignore
 ```
 
 ---
 
-## 4. Key Features Implemented
+## Key Features
 
-- Medallion architecture implementation: Bronze, Silver, and Gold layers
-- Incremental ingestion with Databricks Autoloader
-- Raw-to-curated processing using PySpark transformations
-- Data quality checks and cleaning in the Silver layer
-- Dimensional modeling for analytical consumption
-- Slowly Changing Dimension (SCD Type 2) implementation in the Gold layer
-- Orchestration using Delta Live Tables and Databricks Jobs/Workflows
-- Support for product, customer, order, and region datasets
-- End-to-end pipeline design suitable for real-world analytics workloads
-
----
-
-## 5. Challenges & Solutions
-
-### Challenge 1: Azure Free Trial Compute Limitation
-
-The Azure Free Trial included a limited 4-core compute quota, which constrained the ability to run heavier data engineering workloads and DLT pipelines effectively.
-
-### Solution
-
-To overcome this limitation, the project used Databricks Serverless compute for the DLT pipelines. This enabled:
-
-- Reduced infrastructure management overhead
-- Better compatibility with small trial environments
-- Improved ability to run declarative pipelines without requiring large dedicated clusters
-- A practical approach to building and demonstrating a lakehouse pipeline in a constrained environment
-
-### Challenge 2: Incremental Data Ingestion at Scale
-
-Managing incremental loads while avoiding duplicate data and maintaining historical correctness was an important design consideration.
-
-### Solution
-
-Autoloader was used for incremental ingestion into the Bronze layer, allowing efficient file-based ingestion while preserving scalability and minimizing reprocessing of already ingested files.
+- Medallion Architecture (Bronze → Silver → Gold)
+- Incremental ingestion using Databricks Autoloader
+- Data cleaning, deduplication and standardization in Silver layer
+- Dimensional modeling (Star Schema)
+- Slowly Changing Dimension Type 2 implementation
+- Orchestration with Delta Live Tables / Lakeflow Declarative Pipelines
+- Scheduling and workflow management with Databricks Jobs
+- Practical solution for Azure Free Trial compute limitations using Serverless
 
 ---
 
-## 6. How to Run
+## Challenges & Solutions
 
-### Prerequisites
+### Challenge: Azure Free Trial Core Limitation
+The Azure Free Trial only provides 4 cores, which is insufficient to run classic clusters for Delta Live Tables pipelines.
 
-- An Azure Databricks workspace
-- Access to a Databricks cluster or serverless compute
-- Databricks filesystem access for the dataset files
-- Python and PySpark support in the cluster environment
+**Solution**:  
+Switched to **Databricks Serverless compute** for the DLT / Lakeflow pipelines. This allowed the pipelines to run successfully without needing higher core quotas.
 
-### Steps
+### Challenge: Reliable Incremental Ingestion
+Need to ingest only new files while avoiding duplicates and reprocessing.
 
-1. Create or attach to an Azure Databricks workspace.
-2. Upload or mount the sample dataset files from the `datasets/` folder.
-3. Open the notebooks in the following order:
-   - `notebooks/Bronze/`
-   - `notebooks/Silver/`
-   - `notebooks/Gold/`
-4. Run the Bronze notebook to load raw data using Autoloader.
-5. Execute the Silver notebook for transformations and data cleaning.
-6. Run the Gold notebook to create dimensional models and SCD Type 2 tables.
-7. Optionally configure Databricks Jobs or DLT/Lakeflow pipelines to orchestrate the flow automatically.
-8. Use serverless compute for DLT pipelines if working within an Azure Free Trial or limited-resource environment.
-
-> Note: This repository is designed as a learning and portfolio project. Depending on your Databricks setup, some paths, storage configuration, and cluster settings may need to be adjusted.
+**Solution**:  
+Used **Databricks Autoloader** (`cloudFiles`) for efficient, incremental, and scalable file ingestion into the Bronze layer.
 
 ---
 
-## 7. Learnings
+## How to Run
 
-This project strengthened my understanding of several core data engineering concepts:
+1. Clone this repository
+2. Import the notebooks into your Azure Databricks workspace
+3. Upload the sample datasets from the `datasets/` folder (or point to your own data)
+4. Update any storage paths / catalog / schema names according to your environment
+5. Run the notebooks in order: **Bronze → Silver → Gold**
+6. (Optional) Create a Databricks Job or DLT pipeline to orchestrate the full flow
+7. Prefer **Serverless compute** if you are on Azure Free Trial or have limited quotas
 
-- Designing and implementing a lakehouse architecture using the Medallion pattern
-- Building scalable incremental ingestion pipelines with Autoloader
-- Writing robust PySpark transformations for real-world data-cleaning workflows
-- Applying business logic in the Silver layer to ensure trusted data quality
-- Modeling analytical datasets and dimensions for reporting use cases
-- Implementing Slowly Changing Dimensions (SCD Type 2) to preserve historical data changes
-- Orchestrating modern data pipelines with DLT and Databricks Workflows
-- Solving environment constraints through cost-aware compute design using serverless processing
-
----
-
-## 8. Author
-
-### Project Author
-
-- Name: Abdenour LOUAHABI
-- GitHub: [https://github.com/louahabi79]
-- Email: [abdenourlouahabi23@gmail.com]
-- LinkedIn: [https://www.linkedin.com/in/abdenour-louahabi/]
-
-This project was developed as part of a hands-on data engineering portfolio focused on Azure, Databricks, and modern lakehouse architecture.
+> Note: This is a portfolio/learning project. Some paths and configurations may need adjustment depending on your Databricks workspace.
 
 ---
 
-## 9. Summary
+## Key Learnings
 
-This repository reflects a practical, end-to-end data engineering implementation that combines ingestion, transformation, data modeling, and orchestration into a single lakehouse workflow. It is intended to demonstrate technical capabilities in Azure Databricks, data engineering pipelines, and analytical data modeling in a professional portfolio context.
+- Designing and implementing a full Medallion Architecture on Databricks
+- Building incremental pipelines with Autoloader
+- Writing clean and maintainable PySpark transformations
+- Implementing SCD Type 2 correctly
+- Using Delta Live Tables / Lakeflow Declarative Pipelines
+- Working around real-world cloud resource limitations (Serverless)
+- Structuring a data engineering project for clarity and reproducibility
 
+---
+
+## Author
+
+**Abdenour LOUAHABI**  
+Master’s Student | Aspiring Data Engineer  
+
+- GitHub: [louahabi79](https://github.com/louahabi79)  
+- LinkedIn: [Abdenour Louahabi](https://www.linkedin.com/in/abdenour-louahabi/)  
+- Email: abdenourlouahabi23@gmail.com
+
+---
+
+⭐ If you found this project useful, feel free to star the repository!
