@@ -146,12 +146,10 @@ This project strengthened my understanding of several core data engineering conc
 
 ### Project Author
 
-- Name: [Your Name]
-- Program / Degree: [Master's Student / Data Engineering / Computer Science]
-- LinkedIn: [https://www.linkedin.com/in/your-profile]
-- GitHub: [https://github.com/your-username]
-- Email: [your.email@example.com]
-- Portfolio: [https://your-portfolio-link.com]
+- Name: Abdenour LOUAHABI
+- GitHub: [https://github.com/louahabi79]
+- Email: [abdenourlouahabi23@gmail.com]
+- LinkedIn: [https://www.linkedin.com/in/abdenour-louahabi/]
 
 This project was developed as part of a hands-on data engineering portfolio focused on Azure, Databricks, and modern lakehouse architecture.
 
