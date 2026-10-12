@@ -1,4 +1,20 @@
 # Databricks notebook source
+# ==============================================================================
+# Silver Layer - Product Data Transformation
+# ==============================================================================
+# Purpose: Transforms raw product data from Bronze layer into clean, structured 
+#          format. Applies data quality rules, creates reusable SQL functions,
+#          derives calculated fields, and materializes as Delta tables.
+#
+# Key Transformations:
+#   - Clean and trim product attributes (name, category, brand)
+#   - Create discount_func for consistent pricing calculations
+#   - Calculate discounted_price based on 10% discount rule
+#   - Store as Delta table for ACID compliance
+#
+# Output: Delta table at silver.products_silver
+# ==============================================================================
+
 # MAGIC %md
 # MAGIC ### **Data Reading**
 
@@ -57,6 +73,7 @@ _sqldf.createOrReplaceTempView("products")
 
 # COMMAND ----------
 
+# Apply discount calculation using the defined function
 df.withColumn("discounted_price", expr("databricks_catalog.bronze.discount_func(price)")).show(10)
 
 # COMMAND ----------
@@ -65,6 +82,7 @@ df = _sqldf
 
 # COMMAND ----------
 
+# Write transformed data as Delta table with schema evolution support
 df.write.format("delta")\
         .mode("overwrite")\
         .option("mergeSchema", True)\
