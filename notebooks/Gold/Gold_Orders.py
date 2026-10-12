@@ -1,4 +1,26 @@
 # Databricks notebook source
+# ==============================================================================
+# Gold Layer - Order Facts (FactOrders) - Star Schema
+# ==============================================================================
+# Purpose: Builds an order fact table using star schema design pattern.
+#          Joins order transactions with customer and product dimensions
+#          to create a denormalized analytics table suitable for OLAP queries.
+#
+# Key Operations:
+#   1. Read order transactions from Silver layer
+#   2. Join with DimCustomers to retrieve DimCustomerKey (surrogate key)
+#   3. Join with DimProducts to retrieve DimProductKey (surrogate key)
+#   4. Replace natural keys with surrogate keys for referential integrity
+#   5. Upsert data using Delta merge operation for idempotent loads
+#
+# Star Schema:
+#   - Fact table (FactOrders): contains transaction measures and dimension keys
+#   - Dimension tables (DimCustomers, DimProducts): contain descriptive attributes
+#   - Allows efficient aggregation queries and supports dimensional analysis
+#
+# Output: Delta table at gold.FactOrders (Fact table)
+# ==============================================================================
+
 # MAGIC %md
 # MAGIC ### **Fact Orders**
 
@@ -37,6 +59,8 @@ df.display()
 
 # COMMAND ----------
 
+# Remove natural keys (customer_id, product_id) as they are replaced by surrogate keys
+# Fact table now contains only dimension keys for referential integrity
 df_fact_new = _sqldf.drop("customer_id", "product_id")
 df_fact_new.display()
 
@@ -51,6 +75,8 @@ from delta.tables import DeltaTable
 
 # COMMAND ----------
 
+# Merge operation: updates changed facts and inserts new ones
+# Match condition: order_id + dimension keys uniquely identify a fact row
 if spark.catalog.tableExists("databricks_catalog.gold.factorders"):
     dlt_obj = DeltaTable.forName(spark, "databricks_catalog.gold.factorders")
     dlt_obj.alias("trg").merge(df_fact_new.alias("src"), "trg.order_id = src.order_id AND trg.DimCustomerKey = src.DimCustomerKey AND trg.DimProductKey = src.DimProductKey")\
